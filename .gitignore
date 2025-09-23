@@ -1,0 +1,28 @@
+# Environment variables
+.env
+
+# Terraform
+terraform.tfvars
+.terraform/
+terraform.tfstate
+terraform.tfstate.backup
+
+# Artifacts
+artifacts/
+
+# Logs
+*.log
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+
+# IDE
+.vscode/
+.idea/

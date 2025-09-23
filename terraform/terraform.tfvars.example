@@ -1,0 +1,6 @@
+aws_region = "us-east-1"
+aws_key_name = "your-ssh-key"
+aws_bucket_name = "your-unique-bucket-name"
+
+gcp_project = "your-gcp-project-id"
+gcp_bucket_name = "your-unique-bucket-name"
