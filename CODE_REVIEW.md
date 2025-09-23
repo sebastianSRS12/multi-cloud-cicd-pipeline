@@ -119,3 +119,5 @@ This code review evaluates the multi-cloud CI/CD pipeline project, which aims to
 
 ## Overall Assessment
 The project demonstrates good understanding of multi-cloud infrastructure and CI/CD concepts. With the recommended improvements, it would serve as a solid foundation for production deployments. Focus on security hardening and consistency to make it enterprise-ready.
+
+*Updated for testing purposes.*
