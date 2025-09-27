@@ -52,6 +52,8 @@ EC2   VM    VM
 
 *Recent Update: Complete Azure infrastructure and unified pipeline support added.*
 
+*Test CI/CD: Verifying automated security checks and validation.*
+
 ## Prerequisites
 
 - AWS CLI configured
