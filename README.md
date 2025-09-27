@@ -31,6 +31,8 @@ EC2   VM    VM
 - Modular Terraform configurations
 - Automated build and test
 
+*Recent Update: Complete Azure infrastructure and unified pipeline support added.*
+
 ## Prerequisites
 
 - AWS CLI configured
