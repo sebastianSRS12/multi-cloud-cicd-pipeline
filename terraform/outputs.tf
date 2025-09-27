@@ -44,3 +44,19 @@ output "app_secrets_arn" {
   description = "ARN of the application secrets"
   value       = module.secrets.app_secrets_arn
 }
+
+# IAM outputs
+output "terraform_ci_user_arn" {
+  description = "ARN of the CI user for plan operations"
+  value       = module.iam.terraform_ci_user_arn
+}
+
+output "terraform_apply_user_arn" {
+  description = "ARN of the apply user for deployment operations"
+  value       = module.iam.terraform_apply_user_arn
+}
+
+output "terraform_state_policy_arn" {
+  description = "ARN of the Terraform state access policy"
+  value       = module.iam.terraform_state_policy_arn
+}
