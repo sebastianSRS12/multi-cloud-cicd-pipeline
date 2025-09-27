@@ -21,3 +21,10 @@ module "azure_infra" {
   storage_account_name = var.azure_storage_account_name
   ssh_public_key    = var.azure_ssh_public_key
 }
+
+module "secrets" {
+  source = "./modules/secrets"
+
+  environment  = "dev"
+  project_name = "multi-cloud"
+}
