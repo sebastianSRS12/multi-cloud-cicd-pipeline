@@ -28,3 +28,10 @@ module "secrets" {
   environment  = "dev"
   project_name = "multi-cloud"
 }
+
+module "iam" {
+  source = "./modules/iam"
+
+  environment  = "dev"
+  project_name = "multi-cloud"
+}
