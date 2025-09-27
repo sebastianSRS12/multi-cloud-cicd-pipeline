@@ -45,6 +45,12 @@ EC2   VM    VM
 - **Sensitive Outputs**: Protected Terraform outputs prevent credential leakage
 - **Secret Rotation**: Automated secret lifecycle management
 
+### Phase 3: Access Controls (✅ Complete)
+- **Least-Privilege IAM**: Separate policies for plan vs apply operations
+- **Defense in Depth**: CI/CD users with restricted permissions
+- **Resource Tagging**: Conditional access based on project tags
+- **Granular Permissions**: EC2 and S3 operations limited to tagged resources
+
 ### Infrastructure Security
 - **Multi-Cloud Support**: Complete AWS, GCP, and Azure infrastructure modules
 - **Access Control**: NSG/firewall rules restrict network access
