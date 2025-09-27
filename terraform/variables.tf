@@ -23,3 +23,24 @@ variable "gcp_bucket_name" {
   description = "GCP storage bucket name"
   type        = string
 }
+
+variable "azure_subscription_id" {
+  description = "Azure subscription ID"
+  type        = string
+}
+
+variable "azure_location" {
+  description = "Azure region"
+  type        = string
+  default     = "East US"
+}
+
+variable "azure_storage_account_name" {
+  description = "Azure storage account name"
+  type        = string
+}
+
+variable "azure_ssh_public_key" {
+  description = "SSH public key for Azure VM access"
+  type        = string
+}

@@ -4,3 +4,7 @@ aws_bucket_name = "your-unique-bucket-name"
 
 gcp_project = "your-gcp-project-id"
 gcp_bucket_name = "your-unique-bucket-name"
+
+azure_subscription_id = "your-azure-subscription-id"
+azure_location = "East US"
+azure_storage_account_name = "your-unique-storage-account"
