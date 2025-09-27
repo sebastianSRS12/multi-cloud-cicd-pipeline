@@ -43,4 +43,5 @@ variable "azure_storage_account_name" {
 variable "azure_ssh_public_key" {
   description = "SSH public key for Azure VM access"
   type        = string
+  sensitive   = true
 }

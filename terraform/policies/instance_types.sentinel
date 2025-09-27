@@ -1,0 +1,22 @@
+# Restrict EC2 instance types for cost control
+import "tfplan"
+
+# Find all EC2 instances being created
+instances = filter tfplan.resource_changes as _, rc {
+  rc.type is "aws_instance" and
+  rc.mode is "managed" and
+  rc.change.actions contains "create"
+}
+
+# Allowed instance types (cost-effective)
+allowed_types = ["t2.micro", "t3.micro", "t3.small", "t4g.micro"]
+
+# Check for violations
+violations = filter instances as addr, rc {
+  not rc.change.after.instance_type in allowed_types
+}
+
+# Main rule
+main = rule {
+  length(violations) is 0
+}
