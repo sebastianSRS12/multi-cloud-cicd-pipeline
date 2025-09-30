@@ -4,6 +4,7 @@ module "aws_infra" {
   region      = var.aws_region
   key_name    = var.aws_key_name
   bucket_name = var.aws_bucket_name
+  cluster_name = "multi-cloud-cluster"
 }
 
 module "gcp_infra" {
@@ -11,6 +12,7 @@ module "gcp_infra" {
 
   project    = var.gcp_project
   bucket_name = var.gcp_bucket_name
+  cluster_name = "multi-cloud-cluster"
 }
 
 module "azure_infra" {
@@ -20,4 +22,5 @@ module "azure_infra" {
   location          = var.azure_location
   storage_account_name = var.azure_storage_account_name
   ssh_public_key    = var.azure_ssh_public_key
+  cluster_name = "multi-cloud-cluster"
 }

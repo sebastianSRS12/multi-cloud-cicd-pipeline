@@ -14,32 +14,21 @@ if [ -z "$VM_NAME" ] || [ -z "$ZONE" ] || [ -z "$BUCKET_NAME" ]; then
   exit 1
 fi
 
-ARTIFACT="app.tar.gz"
-LOCAL_ARTIFACT="../artifacts/$ARTIFACT"
+IMAGE_URI="gcr.io/${GCP_PROJECT_ID}/multi-cloud-app:latest"
 
-echo "Uploading artifact to GCP Storage..."
-gsutil cp $LOCAL_ARTIFACT gs://$BUCKET_NAME/$ARTIFACT
+echo "Deploying to GKE cluster..."
+# Get credentials
+gcloud container clusters get-credentials multi-cloud-cluster --zone=$ZONE --project=${GCP_PROJECT_ID}
 
-echo "Deploying to GCP VM..."
-gcloud compute ssh $VM_NAME --zone=$ZONE --command="
-  # Download artifact
-  gsutil cp gs://$BUCKET_NAME/$ARTIFACT /home/ubuntu/$ARTIFACT
+# Install/upgrade Helm chart
+helm upgrade --install multi-cloud-app ./helm \
+  --set image.repository=$IMAGE_URI \
+  --set cloudProvider=GCP \
+  --wait
 
-  # Extract
-  tar -xzf $ARTIFACT
-  cd app
+# Get service external IP
+EXTERNAL_IP=$(kubectl get svc multi-cloud-app-multi-cloud-app -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
 
-  # Install dependencies
-  pip3 install -r requirements.txt
-
-  # Kill existing app if running
-  pkill -f 'python3 app.py' || true
-
-  # Run app
-  export CLOUD_PROVIDER=GCP
-  nohup python3 app.py > app.log 2>&1 &
-
-  echo 'Deployment to GCP completed.'
-"
+echo "Deployment to GCP GKE completed. External IP: $EXTERNAL_IP"
 
 echo "GCP deployment successful."

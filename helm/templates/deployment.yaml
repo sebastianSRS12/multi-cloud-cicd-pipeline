@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "multi-cloud-app.fullname" . }}
+  labels:
+    app: {{ include "multi-cloud-app.name" . }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ include "multi-cloud-app.name" . }}
+  template:
+    metadata:
+      labels:
+        app: {{ include "multi-cloud-app.name" . }}
+    spec:
+      containers:
+      - name: app
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        ports:
+        - containerPort: 5000
+        env:
+        - name: CLOUD_PROVIDER
+          value: {{ .Values.cloudProvider | quote }}
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 5000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 5000
+          initialDelaySeconds: 5
+          periodSeconds: 5

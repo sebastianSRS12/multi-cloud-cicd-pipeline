@@ -14,31 +14,21 @@ if [ -z "$VM_IP" ] || [ -z "$STORAGE_ACCOUNT" ] || [ -z "$SSH_KEY" ]; then
   exit 1
 fi
 
-ARTIFACT="app.tar.gz"
-LOCAL_ARTIFACT="../artifacts/$ARTIFACT"
-CONTAINER_NAME="artifacts"
+IMAGE_URI="${AZURE_REGISTRY}.azurecr.io/multi-cloud-app:latest"
 
-echo "Uploading artifact to Azure Storage..."
-az storage blob upload --account-name $STORAGE_ACCOUNT --container-name $CONTAINER_NAME --name $ARTIFACT --file $LOCAL_ARTIFACT --auth-mode key
+echo "Deploying to AKS cluster..."
+# Get credentials
+az aks get-credentials --resource-group multi-cloud-rg --name multi-cloud-cluster
 
-echo "Deploying to Azure VM..."
-ssh -i $SSH_KEY -o StrictHostKeyChecking=no azureuser@$VM_IP << EOF
-  # Download artifact
-  az storage blob download --account-name $STORAGE_ACCOUNT --container-name $CONTAINER_NAME --name $ARTIFACT --file /home/azureuser/$ARTIFACT --auth-mode key
+# Install/upgrade Helm chart
+helm upgrade --install multi-cloud-app ./helm \
+  --set image.repository=$IMAGE_URI \
+  --set cloudProvider=Azure \
+  --wait
 
-  # Extract
-  tar -xzf $ARTIFACT
-  cd app
+# Get service external IP
+EXTERNAL_IP=$(kubectl get svc multi-cloud-app-multi-cloud-app -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
 
-  # Install dependencies
-  pip3 install -r requirements.txt
-
-  # Kill existing app if running
-  pkill -f 'python3 app.py' || true
-
-  # Run app
-  export CLOUD_PROVIDER=Azure
-  nohup python3 app.py > app.log 2>&1 &
-EOF
+echo "Deployment to Azure AKS completed. External IP: $EXTERNAL_IP"
 
 echo "Azure deployment successful."

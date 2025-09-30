@@ -28,6 +28,12 @@ variable "ssh_public_key" {
   type        = string
 }
 
+variable "cluster_name" {
+  description = "AKS cluster name"
+  type        = string
+  default     = "multi-cloud-cluster"
+}
+
 provider "azurerm" {
   features {}
   subscription_id = var.subscription_id
@@ -152,10 +158,37 @@ resource "azurerm_storage_account" "main" {
   account_replication_type = "LRS"
 }
 
+# AKS Cluster
+resource "azurerm_kubernetes_cluster" "main" {
+  name                = var.cluster_name
+  location            = azurerm_resource_group.main.location
+  resource_group_name = azurerm_resource_group.main.name
+  dns_prefix          = "multi-cloud"
+
+  default_node_pool {
+    name       = "default"
+    node_count = 2
+    vm_size    = "Standard_D2_v2"
+    vnet_subnet_id = azurerm_subnet.main.id
+  }
+
+  identity {
+    type = "SystemAssigned"
+  }
+}
+
 output "vm_public_ip" {
   value = azurerm_public_ip.main.ip_address
 }
 
 output "storage_account_name" {
   value = azurerm_storage_account.main.name
+}
+
+output "aks_cluster_name" {
+  value = azurerm_kubernetes_cluster.main.name
+}
+
+output "aks_cluster_endpoint" {
+  value = azurerm_kubernetes_cluster.main.kube_config[0].host
 }

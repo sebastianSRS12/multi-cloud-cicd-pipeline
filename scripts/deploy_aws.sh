@@ -14,32 +14,24 @@ if [ -z "$INSTANCE_IP" ] || [ -z "$BUCKET_NAME" ] || [ -z "$KEY_FILE" ]; then
   exit 1
 fi
 
-ARTIFACT="app.tar.gz"
-LOCAL_ARTIFACT="../artifacts/$ARTIFACT"
+IMAGE_URI="${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/multi-cloud-app:latest"
 
-echo "Uploading artifact to S3..."
-aws s3 cp $LOCAL_ARTIFACT s3://$BUCKET_NAME/$ARTIFACT
+echo "Deploying to EKS cluster..."
+# Update kubeconfig
+aws eks update-kubeconfig --region ${AWS_REGION} --name multi-cloud-cluster
 
-echo "Deploying to EC2 instance..."
-ssh -i $KEY_FILE -o StrictHostKeyChecking=no ec2-user@$INSTANCE_IP << EOF
-  # Download artifact
-  aws s3 cp s3://$BUCKET_NAME/$ARTIFACT /home/ec2-user/$ARTIFACT
+# Install/upgrade Helm chart
+helm upgrade --install multi-cloud-app ./helm \
+  --set image.repository=$IMAGE_URI \
+  --set cloudProvider=AWS \
+  --wait
 
-  # Extract
-  tar -xzf $ARTIFACT
-  cd app
+# Get service external IP
+EXTERNAL_IP=$(kubectl get svc multi-cloud-app-multi-cloud-app -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+if [ -z "$EXTERNAL_IP" ]; then
+  EXTERNAL_IP=$(kubectl get svc multi-cloud-app-multi-cloud-app -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+fi
 
-  # Install dependencies
-  pip3 install -r requirements.txt
-
-  # Kill existing app if running
-  pkill -f "python3 app.py" || true
-
-  # Run app
-  export CLOUD_PROVIDER=AWS
-  nohup python3 app.py > app.log 2>&1 &
-
-  echo "Deployment to AWS completed."
-EOF
+echo "Deployment to AWS EKS completed. External IP: $EXTERNAL_IP"
 
 echo "AWS deployment successful."

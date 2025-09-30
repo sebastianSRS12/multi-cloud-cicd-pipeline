@@ -30,8 +30,10 @@ EC2   VM    VM
 - Health checks post-deployment
 - Modular Terraform configurations
 - Automated build and test
+- Containerized application with Docker for consistency
+- Kubernetes orchestration with Helm charts
 
-*Recent Update: Complete Azure infrastructure and unified pipeline support added.*
+*Recent Update: Complete Azure infrastructure and unified pipeline support added. Application now containerized with Docker and supports Kubernetes deployments.*
 
 *Test CI/CD: Verifying automated security checks and validation.*
 
@@ -43,6 +45,7 @@ EC2   VM    VM
 - Terraform installed
 - SSH key pair
 - Python 3, pip, git
+- Docker installed and running
 
 ## Setup
 
@@ -83,10 +86,10 @@ EC2   VM    VM
 
 ## Scripts
 
-- `build.sh`: Install deps, run tests, package app
-- `deploy_aws.sh`: Deploy to AWS EC2 via S3
-- `deploy_gcp.sh`: Deploy to GCP VM via GCS
-- `deploy_azure.sh`: Deploy to Azure VM via Storage
+- `build.sh`: Install deps, run tests, build and push Docker images
+- `deploy_aws.sh`: Deploy to AWS EC2 via ECR
+- `deploy_gcp.sh`: Deploy to GCP VM via GCR
+- `deploy_azure.sh`: Deploy to Azure VM via ACR
 - `cicd_pipeline.sh`: Orchestrates the full pipeline with parallel deployments to AWS, GCP, and Azure
 
 ## Cleanup
