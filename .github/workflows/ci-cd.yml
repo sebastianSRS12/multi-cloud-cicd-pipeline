@@ -9,17 +9,63 @@ on:
 jobs:
   validate:
     runs-on: ubuntu-latest
-    # Uncomment the next line when AWS credentials are configured
-    # if: ${{ secrets.AWS_ACCESS_KEY_ID != '' }}
 
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Skip validation without AWS credentials
+    - name: Decide validation mode
+      id: gate
       run: |
-        echo "Skipping Terraform validation - AWS credentials not configured"
-        echo "Add AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, and AWS_REGION to GitHub secrets to enable CI/CD"
+        if [ -n "${{ secrets.AWS_ROLE_TO_ASSUME }}" ]; then
+          echo "run_tf=true" >> $GITHUB_OUTPUT
+        else
+          echo "run_tf=false" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Set up Terraform
+      if: steps.gate.outputs.run_tf == 'true'
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: "1.5.0"
+
+    - name: Configure AWS Credentials (OIDC)
+      if: steps.gate.outputs.run_tf == 'true'
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+        audience: sts.amazonaws.com
+        output-env-credentials: true
+        aws-region: us-east-1
+
+    - name: Terraform Init
+      if: steps.gate.outputs.run_tf == 'true'
+      run: |
+        cd terraform
+        terraform init \
+          -backend-config="bucket=multi-cloud-terraform-state" \
+          -backend-config="key=multi-cloud/terraform.tfstate" \
+          -backend-config="region=us-east-1" \
+          -backend-config="encrypt=true" \
+          -backend-config="dynamodb_table=terraform-locks"
+
+    - name: Terraform Validate
+      if: steps.gate.outputs.run_tf == 'true'
+      run: |
+        cd terraform
+        terraform validate
+
+    - name: Terraform Plan
+      if: steps.gate.outputs.run_tf == 'true'
+      run: |
+        cd terraform
+        terraform plan -no-color
+
+    - name: Skip validation (no AWS OIDC role configured)
+      if: steps.gate.outputs.run_tf != 'true'
+      run: |
+        echo "Skipping Terraform validation - AWS_ROLE_TO_ASSUME not configured"
+        echo "Add AWS_ROLE_TO_ASSUME and AWS_REGION (or hardcode region in workflow) to enable Terraform validation"
 
   build-and-test:
     runs-on: ubuntu-latest
@@ -56,25 +102,37 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Configure AWS Credentials
+    - name: Decide deploy mode
+      id: deploy_gate
+      run: |
+        if [ -n "${{ secrets.AWS_ROLE_TO_ASSUME }}" ] && [ -n "${{ secrets.AWS_ACCOUNT_ID }}" ]; then
+          echo "run_deploy=true" >> $GITHUB_OUTPUT
+        else
+          echo "run_deploy=false" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Configure AWS Credentials (OIDC)
+      if: steps.deploy_gate.outputs.run_deploy == 'true'
       uses: aws-actions/configure-aws-credentials@v4
       with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ${{ secrets.AWS_REGION }}
+        role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+        audience: sts.amazonaws.com
+        output-env-credentials: true
+        aws-region: us-east-1
 
     - name: Build and push Docker images
+      if: steps.deploy_gate.outputs.run_deploy == 'true'
       run: |
-        # Login to registries (add GCP and Azure credentials as needed)
-        aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
+        # Login to AWS ECR using OIDC credentials
+        aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com
 
         # Build and push (simplified - add other registries)
         cd app
         docker build -t multi-cloud-app:latest .
-        docker tag multi-cloud-app:latest ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/multi-cloud-app:latest
-        docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/multi-cloud-app:latest
+        docker tag multi-cloud-app:latest ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/multi-cloud-app:latest
+        docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/multi-cloud-app:latest
 
-    - name: Deploy message
+    - name: Skip deploy (no AWS OIDC role / account configured)
+      if: steps.deploy_gate.outputs.run_deploy != 'true'
       run: |
-        echo "Deployment would happen here with the updated scripts"
-        echo "Run ./scripts/cicd_pipeline.sh locally with proper credentials"
+        echo "Skipping deploy - missing AWS_ROLE_TO_ASSUME and/or AWS_ACCOUNT_ID secrets"
