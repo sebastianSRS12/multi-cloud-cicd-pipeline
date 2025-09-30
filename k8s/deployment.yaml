@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: multi-cloud-app
+  labels:
+    app: multi-cloud-app
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: multi-cloud-app
+  template:
+    metadata:
+      labels:
+        app: multi-cloud-app
+    spec:
+      containers:
+      - name: app
+        image: IMAGE_URI  # Will be replaced with actual image URI
+        ports:
+        - containerPort: 5000
+        env:
+        - name: CLOUD_PROVIDER
+          value: "Kubernetes"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 5000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 5000
+          initialDelaySeconds: 5
+          periodSeconds: 5

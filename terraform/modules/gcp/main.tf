@@ -35,6 +35,12 @@ variable "bucket_name" {
   type        = string
 }
 
+variable "cluster_name" {
+  description = "GKE cluster name"
+  type        = string
+  default     = "multi-cloud-cluster"
+}
+
 provider "google" {
   project = var.project
   region  = var.region
@@ -111,10 +117,36 @@ resource "google_storage_bucket" "main" {
   uniform_bucket_level_access = true
 }
 
+# GKE Cluster
+resource "google_container_cluster" "main" {
+  name     = var.cluster_name
+  location = var.zone
+
+  network    = google_compute_network.main.self_link
+  subnetwork = google_compute_subnetwork.main.self_link
+
+  initial_node_count = 2
+
+  node_config {
+    machine_type = "e2-medium"
+    oauth_scopes = [
+      "https://www.googleapis.com/auth/cloud-platform"
+    ]
+  }
+}
+
 output "vm_public_ip" {
   value = google_compute_instance.main.network_interface[0].access_config[0].nat_ip
 }
 
 output "bucket_name" {
   value = google_storage_bucket.main.name
+}
+
+output "gke_cluster_name" {
+  value = google_container_cluster.main.name
+}
+
+output "gke_cluster_endpoint" {
+  value = google_container_cluster.main.endpoint
 }

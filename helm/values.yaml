@@ -1,0 +1,17 @@
+image:
+  repository: IMAGE_URI
+  tag: "latest"
+  pullPolicy: Always
+
+replicaCount: 3
+
+service:
+  type: LoadBalancer
+  port: 80
+  targetPort: 5000
+
+ingress:
+  enabled: false
+  host: app.example.com
+
+cloudProvider: Kubernetes
