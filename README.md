@@ -85,7 +85,12 @@ The automated pipeline handles everything from code commit to production deploym
 
 
 
+✨ Features
 
+🔄 Automation	☁️ Multi-Cloud	🛡️ Security	📊 Monitoring
+GitHub Actions CI/CD	AWS, Azure, GCP	Security Scanning	Cloud Monitoring
+Terraform IaC	Kubernetes Native	IAM & Policies	Logging & Metrics
+Helm Charts	Cross-Cloud Deploy	Secret Management	Health Checks
 
 
 
