@@ -9,6 +9,10 @@ spec:
   ports:
   - port: {{ .Values.service.port }}
     targetPort: {{ .Values.service.targetPort }}
+  - name: metrics
+    port: {{ .Values.service.metricsPort }}
+    targetPort: {{ .Values.service.metricsTargetPort }}
+    protocol: TCP
     protocol: TCP
   selector:
     app: {{ include "multi-cloud-app.name" . }}
