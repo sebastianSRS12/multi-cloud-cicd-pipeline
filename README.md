@@ -1,37 +1,12 @@
-📁 Project Structure
-text
 multi-cloud-cicd-pipeline/
-├── 🐳 app/                          # Sample Flask Application
-│   ├── app.py                      # Flask entry point
-│   ├── Dockerfile                  # Container definition
-│   ├── docker-compose.yml          # Local development
-│   └── requirements.txt            # Python dependencies
-│
-├── ⚙️ deploy/                       # Cloud Deployment Scripts
-│   ├── aws/
-│   ├── azure/
-│   └── gcp/
-│
-├── 🎯 helm/                        # Kubernetes Helm Charts
-│   ├── Chart.yaml
-│   ├── values.yaml
-│   └── templates/
-│
-├── 🏗️ terraform/                   # Infrastructure as Code
-│   ├── main.tf                     # Root configuration
-│   ├── modules/                    # Reusable modules
-│   │   ├── aws/
-│   │   ├── azure/
-│   │   └── gcp/
-│   └── policies/                   # Sentinel policies
-│
-├── 📜 scripts/                     # Automation Scripts
-│   ├── build.sh
-│   ├── cicd_pipeline.sh
-│   └── deploy_*.sh
-│
-├── 🔧 .github/workflows/           # CI/CD Pipelines
-└── 📚 docs/                        # Documentation
+├── app/                 # Flask application
+├── deploy/              # Cloud-specific deployment scripts
+├── helm/                # Kubernetes Helm charts
+├── terraform/           # Infrastructure as Code
+├── scripts/             # Automation scripts
+├── .github/workflows/   # CI/CD pipelines
+└── docs/                # Documentation
+
 ⚡ Quick Start
 🚀 One-Command Deployment
 bash
@@ -165,6 +140,10 @@ pip install -r requirements-dev.txt
 
 # Set up pre-commit hooks
 pre-commit install
+
+pip install -r requirements-dev.txt  # Development dependencies
+pre-commit install                   # Pre-commit hooks
+./scripts/validate.sh               # Local validation
 
 # Run local validation
 ./scripts/validate.sh
