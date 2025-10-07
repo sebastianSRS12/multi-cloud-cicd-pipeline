@@ -9,7 +9,7 @@ echo "Starting local CI/CD pipeline simulation..."
 
 # Build
 echo "Building application..."
-./build.sh
+scripts/build.sh
 
 # Deploy in parallel
 echo "Deploying to local AWS and Azure..."
