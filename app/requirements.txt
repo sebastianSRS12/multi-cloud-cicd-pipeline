@@ -1,4 +1,4 @@
 Flask==2.3.3
-pytest==7.4.0
+pytest==8.4.2
 requests==2.31.0
 prometheus-flask-exporter==0.22.2
