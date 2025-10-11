@@ -1,0 +1,17 @@
+site_name: Multi-Cloud CICD Pipeline Documentation
+nav:
+  - Home: index.md
+  - Architecture: architecture.md
+  - Usage: usage.md
+  - API: api.md
+  - Contributing: contributing.md
+theme:
+  name: material
+  palette:
+    primary: indigo
+    accent: amber
+markdown_extensions:
+  - admonition
+  - codehilite
+  - toc:
+      permalink: true

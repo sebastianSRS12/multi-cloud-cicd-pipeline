@@ -1,6 +1,7 @@
+<![CDATA[
 # Multi-Cloud CICD Pipeline
 
-[![Build Status](https://example.com/status.svg)](https://example.com) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE) [![Docker Pulls](https://img.shields.io/docker/pulls/your-org/multi-cloud-cicd-pipeline.svg)](https://hub.docker.com/r/your-org/multi-cloud-cicd-pipeline) [![Coverage Status](https://example.com/coverage.svg)](https://example.com) [![GitHub stars](https://img.shields.io/github/stars/your-org/multi-cloud-cicd-pipeline.svg?style=social&label=Stars)](https://github.com/your-org/multi-cloud-cicd-pipeline/stargazers) [![GitHub issues](https://img.shields.io/github/issues/your-org/multi-cloud-cicd-pipeline.svg)](https://github.com/your-org/multi-cloud-cicd-pipeline/issues)
+[![Build Status](https://github.com/your-org/multi-cloud-cicd-pipeline/actions/workflows/ci.yml/badge.svg)](https://github.com/your-org/multi-cloud-cicd-pipeline/actions/workflows/ci.yml) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE) [![Docker Pulls](https://img.shields.io/docker/pulls/your-org/multi-cloud-cicd-pipeline.svg)](https://hub.docker.com/r/your-org/multi-cloud-cicd-pipeline) [![Coverage Status](https://coveralls.io/repos/github/your-org/multi-cloud-cicd-pipeline/badge.svg?branch=main)](https://coveralls.io/github/your-org/multi-cloud-cicd-pipeline?branch=main) [![GitHub stars](https://img.shields.io/github/stars/your-org/multi-cloud-cicd-pipeline.svg?style=social&label=Stars)](https://github.com/your-org/multi-cloud-cicd-pipeline/stargazers) [![GitHub issues](https://img.shields.io/github/issues/your-org/multi-cloud-cicd-pipeline.svg)](https://github.com/your-org/multi-cloud-cicd-pipeline/issues)
 
 ## Overview
 
@@ -26,10 +27,11 @@ A **robust, production‑ready CI/CD pipeline** that enables developers to build
   - [Deploy to Cloud Providers](#deploy-to-cloud-providers)
 - [Monitoring & Observability](#monitoring--observability)
 - [Security](#security)
-- [CI/CD Pipeline Details](#cicd-pipeline-details)
 - [Testing](#testing)
-- [Contributing](#contributing)
+- [Documentation Site](#documentation-site)
+- [API Documentation](#api-documentation)
 - [Roadmap](#roadmap)
+- [Community](#community)
 - [License](#license)
 
 ## Features
@@ -57,16 +59,22 @@ graph TD
     E --> F[Push to Registry]
     F --> G[Terraform Plan & Apply]
     G --> H[Helm Deploy]
+    H --> N[Secret Management (Vault)]
+    N --> O[Monitoring Setup (Prometheus/Grafana)]
   end
   subgraph Cloud
     I[Terraform] --> J[AWS]
     I --> K[Azure]
     I --> L[GCP]
     H --> M[Kubernetes Cluster]
+    O --> P[Prometheus]
+    O --> Q[Grafana]
   end
   B --> C
   F --> I
   I --> H
+  I --> N
+  I --> O
 ```
 
 ## Components
@@ -97,7 +105,7 @@ graph TD
 ### `terraform/`
 
 - **Purpose:** Terraform root configuration and reusable modules for each cloud provider.
-- **Key files::
+- **Key files::**
   - [`terraform/main.tf`](terraform/main.tf) – Root module.
   - Modules under [`terraform/modules/`](terraform/modules/) – Provider‑specific resources (AWS, Azure, GCP, IAM, Secrets).
   - Policy files in [`terraform/policies/`](terraform/policies/) – Sentinel policies for compliance.
@@ -133,14 +141,35 @@ graph TD
    # or source .venv/bin/activate   # Unix
    pip install -r app/requirements.txt
    ```
-3. **Initialize Terraform**
-   ```sh
-   terraform init
-   ```
-4. **(Optional) Install pre‑commit hooks**
-   ```sh
-   pre-commit install
-   ```
+
+## Quick Start
+
+Follow these steps to get the project up and running locally:
+
+```sh
+# Clone the repository
+git clone https://github.com/your-org/multi-cloud-cicd-pipeline.git
+cd multi-cloud-cicd-pipeline
+
+# Set up Python environment
+python -m venv .venv
+source .venv/bin/activate   # Unix
+# .venv\Scripts\activate   # Windows
+pip install -r app/requirements.txt
+
+# Configure environment variables
+cp .env.example .env
+# Edit .env as needed
+
+# Start local services
+docker compose -f app/docker-compose.yml up --build
+```
+
+The Flask application will be available at `http://localhost:5000`. Use the CI/CD scripts for testing and building Docker images:
+
+```sh
+./scripts/cicd_pipeline_local.sh
+```
 
 ## Configuration
 
@@ -150,6 +179,17 @@ cp .env.example .env
 # Edit .env as needed (e.g., cloud credentials, Docker registry, etc.)
 ```
 
+### Environment Variables
+
+| Variable | Description |
+|----------|-------------|
+| `AWS_IP` | Public IP address of the AWS instance |
+| `AWS_BUCKET` | S3 bucket name for storing artifacts |
+| `AZURE_IP` | Public IP address of the Azure VM |
+| `AZURE_STORAGE` | Azure Storage account name |
+| `SSH_KEY` | Path to the SSH private key for remote access |
+| `GCP_PROJECT_ID` | GCP project ID for deployments |
+
 ## Usage
 
 ### Run Locally
@@ -158,6 +198,7 @@ Start the Flask application and its dependencies with Docker Compose:
 ```sh
 docker compose -f app/docker-compose.yml up --build
 ```
+
 The app will be available at `http://localhost:5000`.
 
 ### CI/CD Pipelines
@@ -173,15 +214,29 @@ Run the full CI/CD flow locally (lint, tests, build, push, Terraform plan):
 ```sh
 ./scripts/deploy_aws.sh
 ```
+
 #### Azure
 ```sh
 ./scripts/deploy_azure.sh
 ```
+
 #### GCP
 ```sh
 ./scripts/deploy_gcp.sh
 ```
+
 Each script uses the corresponding Terraform module and Helm chart to provision resources and deploy the application.
+
+### API Documentation
+
+The Flask API is documented using **Swagger/OpenAPI**. Generate the OpenAPI specification with:
+
+```sh
+pip install flask-swagger-ui
+flask run --host 0.0.0.0 --port 5000
+```
+
+The generated OpenAPI JSON can be accessed at `http://localhost:5000/openapi.json`. For a hosted version, see the `docs/api.md` page in the documentation site.
 
 ## Monitoring & Observability
 
@@ -191,34 +246,73 @@ Each script uses the corresponding Terraform module and Helm chart to provision 
 
 ## Security
 
-- **Dependabot** – Automated dependency updates.
-- **Snyk** – Continuous vulnerability scanning.
-- **Static analysis** – `bandit` for Python security checks.
-
-## CI/CD Pipeline Details
-
-The pipeline is driven by the `scripts/cicd_pipeline.sh` script and can be integrated into GitHub Actions. The stages are:
-- **Linting** – `pre‑commit` checks.
-- **Unit Tests** – `pytest` runs the test suite.
-- **Docker Build** – Builds a multi‑arch image.
-- **Docker Push** – Pushes the image to a registry.
-- **Terraform Plan & Apply** – Plans and applies infrastructure changes.
-- **Helm Release** – Deploys the application to a Kubernetes cluster.
+- **Dependency scanning**: Enable Dependabot and Snyk in GitHub to automatically scan for vulnerable dependencies.
+- **Secret management**: Store sensitive values (e.g., cloud credentials, SSH keys) in a secret manager such as HashiCorp Vault, AWS Secrets Manager, or Azure Key Vault. Reference them in Terraform via `var.<name>` and avoid committing them to the repository.
+- **Network hardening**: Restrict security group ingress rules to trusted IP ranges. Use bastion hosts or VPN for remote access.
+- **TLS/HTTPS**: Configure the Flask application and load balancers to use TLS certificates. Consider using Let's Encrypt for automatic certificate provisioning.
 
 ## Testing
 
-Run the Python test suite with pytest:
+### Unit Tests
+Run the Python unit test suite with pytest:
+
 ```sh
 pytest ./app/tests
 ```
 
-## Contributing
+### Integration Tests
+Execute end‑to‑end tests that validate the full CI/CD pipeline:
 
-Contributions are welcome! Please read the [CONTRIBUTING guidelines](CONTRIBUTING.md) before submitting a pull request.
+```sh
+./scripts/cicd_pipeline_local.sh --test-only
+```
 
-- **Issue templates** – Use the provided templates to report bugs or request features.
-- **Pull‑request template** – Follow the PR template for a smooth review process.
-- **Code of Conduct** – See [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
+### Terraform Module Tests
+Validate Terraform modules using Terratest (Go). Ensure Go is installed and run:
+
+```sh
+cd terraform/tests
+go test -v ./...
+```
+
+### Code Quality
+Enforce code style and linting with pre‑commit hooks:
+
+```sh
+pre-commit run --all-files
+```
+
+## Documentation Site
+
+- The documentation site is built with MkDocs. After installing dependencies, you can serve it locally:
+
+```sh
+pip install mkdocs mkdocs-material
+mkdocs serve
+```
+
+- Once running, access the site at `http://127.0.0.1:8000`. The site includes sections for Architecture, Usage, API, and Contributing.
+
+- View the source files in the `docs/` directory.
+
+We use **MkDocs** to generate a static documentation site.
+
+- Install MkDocs and the Material theme:
+
+```sh
+pip install mkdocs mkdocs-material
+```
+
+- Create `mkdocs.yml` (see the file added to the repository) and write documentation pages under the `docs/` directory.
+- Build and serve locally:
+
+```sh
+mkdocs serve
+```
+
+- Deploy the site to GitHub Pages using the `gh-pages` branch.
+
+The documentation site will include API reference, architecture diagrams, and contribution guidelines.
 
 ## Roadmap
 
@@ -229,6 +323,14 @@ Contributions are welcome! Please read the [CONTRIBUTING guidelines](CONTRIBUTIN
 - Add performance benchmark suite
 - Automate release workflow with GitHub Releases
 
+## Community
+
+- **Code of Conduct**: Please read our [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md) to understand the expected behavior in this community.
+- **Code Review Guidelines**: Our review process is documented in [`CODE_REVIEW.md`](CODE_REVIEW.md).
+- **Contributing**: See the [`CONTRIBUTING.md`](CONTRIBUTING.md) for details on how to submit patches, report bugs, and propose new features.
+- **Changelog**: Review project changes in [`CHANGELOG.md`](CHANGELOG.md).
+
 ## License
 
 This project is licensed under the MIT License – see the [LICENSE](LICENSE) file for details.
+]]>

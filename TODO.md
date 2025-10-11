@@ -10,8 +10,8 @@
 - [ ] Add multi‑arch Docker builds
 - [ ] Add monitoring (Prometheus, Grafana) integration
 - [ ] Add performance benchmark scripts
-- [ ] Add documentation site (MkDocs)
-- [ ] Add API documentation for Flask app (Swagger/OpenAPI)
+- [x] Add documentation site (MkDocs)
+- [x] Add API documentation for Flask app (Swagger/OpenAPI)
 - [ ] Add example local‑dev environment (Docker Compose overrides)
 - [ ] Add serverless deployment options (AWS Lambda, Azure Functions, GCP Cloud Functions)
 - [ ] Add Terraform module testing with Terratest
