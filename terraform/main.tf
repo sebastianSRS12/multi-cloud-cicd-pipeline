@@ -2,9 +2,13 @@ module "aws_infra" {
   source = "./modules/aws"
 
   region      = var.aws_region
-  key_name    = var.aws_key_name
-  bucket_name = var.aws_bucket_name
-  cluster_name = "multi-cloud-cluster"
+  key_name        = var.aws_key_name
+  bucket_name     = var.aws_bucket_name
+  cluster_name    = "multi-cloud-cluster"
+  vpc_cidr        = var.aws_vpc_cidr
+  public_subnets  = var.aws_public_subnets
+  private_subnets = var.aws_private_subnets
+  azs             = var.aws_azs
 }
 
 module "gcp_infra" {

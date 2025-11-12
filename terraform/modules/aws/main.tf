@@ -13,18 +13,6 @@ variable "region" {
   default     = "us-east-1"
 }
 
-variable "vpc_cidr" {
-  description = "CIDR block for VPC"
-  type        = string
-  default     = "10.0.0.0/16"
-}
-
-variable "subnet_cidr" {
-  description = "CIDR block for subnet"
-  type        = string
-  default     = "10.0.1.0/24"
-}
-
 variable "instance_type" {
   description = "EC2 instance type"
   type        = string
@@ -47,52 +35,56 @@ variable "cluster_name" {
   default     = "multi-cloud-cluster"
 }
 
+variable "vpc_cidr" {
+  description = "CIDR block for VPC"
+  type        = string
+  default     = "10.0.0.0/16"
+}
+
+variable "public_subnets" {
+  description = "List of public subnets CIDR blocks"
+  type        = list(string)
+  default     = ["10.0.101.0/24", "10.0.102.0/24"]
+}
+
+variable "private_subnets" {
+  description = "List of private subnets CIDR blocks"
+  type        = list(string)
+  default     = ["10.0.1.0/24", "10.0.2.0/24"]
+}
+
+variable "azs" {
+  description = "List of availability zones"
+  type        = list(string)
+  default     = ["us-east-1a", "us-east-1b"]
+}
+
 provider "aws" {
   region = var.region
 }
 
-resource "aws_vpc" "main" {
-  cidr_block = var.vpc_cidr
-  tags = {
-    Name = "multi-cloud-vpc"
-  }
-}
+module "vpc" {
+  source  = "terraform-aws-modules/vpc/aws"
+  version = "6.5.0"
 
-resource "aws_subnet" "main" {
-  vpc_id     = aws_vpc.main.id
-  cidr_block = var.subnet_cidr
-  tags = {
-    Name = "multi-cloud-subnet"
-  }
-}
+  name = "multi-cloud-vpc"
+  cidr = var.vpc_cidr
 
-resource "aws_internet_gateway" "main" {
-  vpc_id = aws_vpc.main.id
-  tags = {
-    Name = "multi-cloud-igw"
-  }
-}
+  azs             = var.azs
+  private_subnets = var.private_subnets
+  public_subnets  = var.public_subnets
 
-resource "aws_route_table" "main" {
-  vpc_id = aws_vpc.main.id
-
-  route {
-    cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.main.id
-  }
+  enable_nat_gateway = true
+  single_nat_gateway = true
 
   tags = {
-    Name = "multi-cloud-rt"
+    Terraform   = "true"
+    Environment = "dev"
   }
-}
-
-resource "aws_route_table_association" "main" {
-  subnet_id      = aws_subnet.main.id
-  route_table_id = aws_route_table.main.id
 }
 
 resource "aws_security_group" "web" {
-  vpc_id = aws_vpc.main.id
+  vpc_id = module.vpc.vpc_id
 
   ingress {
     from_port   = 22
@@ -124,7 +116,7 @@ resource "aws_instance" "web" {
   ami           = "ami-0c55b159cbfafe1d0"  # Amazon Linux 2 in us-east-1
   instance_type = var.instance_type
   key_name      = var.key_name
-  subnet_id     = aws_subnet.main.id
+  subnet_id     = module.vpc.public_subnets[0] # Launch in the first public subnet
   vpc_security_group_ids = [aws_security_group.web.id]
 
   user_data = <<-EOF
@@ -175,7 +167,7 @@ resource "aws_eks_cluster" "main" {
   role_arn = aws_iam_role.eks_cluster.arn
 
   vpc_config {
-    subnet_ids = [aws_subnet.main.id]
+    subnet_ids = module.vpc.private_subnets # EKS should use private subnets
   }
 
   depends_on = [aws_iam_role_policy_attachment.eks_cluster_policy]
@@ -216,7 +208,7 @@ resource "aws_eks_node_group" "main" {
   cluster_name    = aws_eks_cluster.main.name
   node_group_name = "${var.cluster_name}-node-group"
   node_role_arn   = aws_iam_role.eks_nodes.arn
-  subnet_ids      = [aws_subnet.main.id]
+  subnet_ids      = module.vpc.private_subnets # EKS node group should use private subnets
 
   scaling_config {
     desired_size = 2
@@ -247,4 +239,19 @@ output "eks_cluster_name" {
 
 output "eks_cluster_endpoint" {
   value = aws_eks_cluster.main.endpoint
+}
+
+output "vpc_id" {
+  description = "The ID of the VPC"
+  value       = module.vpc.vpc_id
+}
+
+output "public_subnets" {
+  description = "List of IDs of public subnets"
+  value       = module.vpc.public_subnets
+}
+
+output "private_subnets" {
+  description = "List of IDs of private subnets"
+  value       = module.vpc.private_subnets
 }

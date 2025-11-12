@@ -14,6 +14,30 @@ variable "aws_bucket_name" {
   type        = string
 }
 
+variable "aws_vpc_cidr" {
+  description = "CIDR block for AWS VPC"
+  type        = string
+  default     = "10.0.0.0/16"
+}
+
+variable "aws_public_subnets" {
+  description = "List of public subnets CIDR blocks for AWS VPC"
+  type        = list(string)
+  default     = ["10.0.101.0/24", "10.0.102.0/24"]
+}
+
+variable "aws_private_subnets" {
+  description = "List of private subnets CIDR blocks for AWS VPC"
+  type        = list(string)
+  default     = ["10.0.1.0/24", "10.0.2.0/24"]
+}
+
+variable "aws_azs" {
+  description = "List of availability zones for AWS VPC"
+  type        = list(string)
+  default     = ["us-east-1a", "us-east-1b"]
+}
+
 variable "gcp_project" {
   description = "GCP project ID"
   type        = string
