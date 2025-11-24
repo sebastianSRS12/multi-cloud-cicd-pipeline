@@ -1,5 +1,5 @@
 Flask==2.3.3
-pytest==8.4.2
+pytest==9.0.1
 requests==2.31.0
 prometheus-flask-exporter==0.23.2
 flask-swagger-ui==4.11.1
