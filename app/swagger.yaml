@@ -1,0 +1,38 @@
+openapi: 3.0.0
+info:
+  title: Multi-Cloud CI/CD Demo API
+  description: API for the multi-cloud CI/CD demonstration application.
+  version: 1.0.0
+servers:
+  - url: /
+paths:
+  /:
+    get:
+      summary: Home endpoint
+      description: Returns a greeting message indicating the cloud provider.
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Hello from Local! This is a multi-cloud CI/CD demo."
+  /health:
+    get:
+      summary: Health check endpoint
+      description: Returns the health status of the application.
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "healthy"

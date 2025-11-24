@@ -37,6 +37,9 @@ jobs:
           . .venv/bin/activate
           pytest ./app/tests
 
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
@@ -51,5 +54,6 @@ jobs:
         with:
           context: .
           file: app/Dockerfile
+          platforms: linux/amd64,linux/arm64
           push: true
           tags: ${{ secrets.DOCKER_USERNAME }}/multi-cloud-cicd-pipeline:${{ github.sha }}
